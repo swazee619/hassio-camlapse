@@ -17,11 +17,13 @@
 ### Option 1: HACS (Recommended)
 
 1.  Open HACS in Home Assistant.
-2.  Go to **Integrations** > **Triple dots** > **Custom repositories**.
-3.  Add the URL of this repository and select **Integration** as the category.
-4.  Click **Add**.
-5.  Search for **Hassio CamLapse** and click **Download**.
-6.  Restart Home Assistant.
+2.  Go to **Integrations** > **Triple dots** (top right) > **Custom repositories**.
+3.  Paste the repository URL: `https://github.com/tolwi/hassio-camlapse` into the **Repository** field.
+4.  Select **Integration** as the **Category**.
+5.  Click **Add**.
+6.  Close the custom repositories dialog.
+7.  Search for **Hassio CamLapse** and click **Download**.
+8.  Restart Home Assistant.
 
 ### Option 2: Manual Installation
 
