@@ -1,11 +1,14 @@
 {
   "domain": "hassio_camlapse",
   "name": "Hassio CamLapse",
-  "codeowners": [],
+  "codeowners": [
+    "@tolwi"
+  ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/tolwi/hassio-camlapse",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/tolwi/hassio-camlapse/issues",
   "requirements": [],
   "version": "0.1.0"
 }
