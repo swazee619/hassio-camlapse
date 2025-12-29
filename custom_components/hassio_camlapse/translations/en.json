@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Timelapse",
+        "description": "Set up your timelapse configuration",
+        "data": {
+          "camera_entity_id": "Camera Entity ID",
+          "interval_seconds": "Snapshot Interval (seconds)",
+          "snapshot_path": "Snapshot Storage Path",
+          "video_path": "Video Storage Path",
+          "output_fps": "Output Video FPS",
+          "image_retention_days": "Image Retention (days)",
+          "video_retention_days": "Video Retention (days)",
+          "output_codec": "Output Codec",
+          "videos_per_day": "Videos Per Day"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Timelapse",
+        "description": "Update your timelapse configuration",
+        "data": {
+          "camera_entity_id": "Camera Entity ID",
+          "interval_seconds": "Snapshot Interval (seconds)",
+          "snapshot_path": "Snapshot Storage Path",
+          "video_path": "Video Storage Path",
+          "output_fps": "Output Video FPS",
+          "image_retention_days": "Image Retention (days)",
+          "video_retention_days": "Video Retention (days)",
+          "output_codec": "Output Codec",
+          "videos_per_day": "Videos Per Day"
+        }
+      }
+    },
+    "error": {
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "selector": {
+    "output_codec": {
+      "options": {
+        "libx264": "H.264 (AVC)",
+        "libx265": "H.265 (HEVC)"
+      }
+    }
+  }
+}

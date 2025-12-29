@@ -1,0 +1,4 @@
+homeassistant>=2024.5.5
+
+ruff>=0.14.10
+mypy>=1.19.1

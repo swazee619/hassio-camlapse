@@ -1,0 +1,13 @@
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tools]
+python = "3.13"
+
+[tasks.lint]
+description = "Lint code"
+dir = "custom_components"
+run = """
+ruff check .
+mypy .
+"""
