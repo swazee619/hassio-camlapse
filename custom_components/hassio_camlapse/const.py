@@ -10,8 +10,12 @@ CONF_IMAGE_RETENTION_DAYS = "image_retention_days"
 CONF_VIDEO_RETENTION_DAYS = "video_retention_days"
 CONF_VIDEOS_PER_DAY = "videos_per_day"
 CONF_OUTPUT_CODEC = "output_codec"
+CONF_START_TIME = "start_time"
+CONF_END_TIME = "end_time"
 
 DEFAULT_NAME = "Hassio CamLapse"
+DEFAULT_START_TIME = "00:00:00"
+DEFAULT_END_TIME = "23:59:59"
 DEFAULT_INTERVAL_SECONDS = 60
 DEFAULT_SNAPSHOT_PATH = "/media/timelapse"
 DEFAULT_VIDEO_PATH = "/media/timelapse"

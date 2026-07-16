@@ -16,6 +16,8 @@ from .const import (
     DEFAULT_VIDEO_RETENTION_DAYS,
     DEFAULT_VIDEOS_PER_DAY,
     DEFAULT_OUTPUT_CODEC,
+    DEFAULT_START_TIME,
+    DEFAULT_END_TIME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,11 +41,15 @@ class TimelapseManager:
         self.video_retention_days = config.get("video_retention_days", DEFAULT_VIDEO_RETENTION_DAYS)
         self.videos_per_day = config.get("videos_per_day", DEFAULT_VIDEOS_PER_DAY)
         self.output_codec = config.get("output_codec", DEFAULT_OUTPUT_CODEC)
+        self.start_time = config.get("start_time", DEFAULT_START_TIME)
+        self.end_time = config.get("end_time", DEFAULT_END_TIME)
 
         self._remove_timer: Optional[CALLBACK_TYPE] = None
 
         # Initialize Services
-        self.snapshot_service = SnapshotService(hass, self.camera_entity_id, self.snapshot_path, self.camera_id)
+        self.snapshot_service = SnapshotService(
+            hass, self.camera_entity_id, self.snapshot_path, self.camera_id, self.start_time, self.end_time
+        )
 
         self.video_service = VideoService(
             hass,

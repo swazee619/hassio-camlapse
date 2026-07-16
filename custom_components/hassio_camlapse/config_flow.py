@@ -32,6 +32,10 @@ from .const import (
     DEFAULT_VIDEOS_PER_DAY,
     DEFAULT_OUTPUT_CODEC,
     CONF_OUTPUT_CODEC,
+    CONF_START_TIME,
+    CONF_END_TIME,
+    DEFAULT_START_TIME,
+    DEFAULT_END_TIME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +57,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 translation_key="output_codec",
             )
         ),
+        vol.Required(CONF_START_TIME, default=DEFAULT_START_TIME): selector.TimeSelector(),
+        vol.Required(CONF_END_TIME, default=DEFAULT_END_TIME): selector.TimeSelector(),
     }
 )
 
@@ -121,6 +127,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         translation_key="output_codec",
                     )
                 ),
+                vol.Required(
+                    CONF_START_TIME,
+                    default=current_config.get(CONF_START_TIME, DEFAULT_START_TIME),
+                ): selector.TimeSelector(),
+                vol.Required(
+                    CONF_END_TIME,
+                    default=current_config.get(CONF_END_TIME, DEFAULT_END_TIME),
+                ): selector.TimeSelector(),
             }
         )
 
