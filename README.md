@@ -6,6 +6,8 @@
 
 - **Automated Snapshots**: Captures images from any `camera` entity at a configurable interval (default: 60s).
 - **Active Time Window**: Restrict snapshot capture to a specific time range (e.g., daylight hours only, or overnight only). Supports ranges that cross midnight.
+- **Pause/Resume Switch**: A `switch` entity per camera to pause and resume snapshot capture on demand (e.g. via automation or dashboard), without disabling the whole integration. State survives restarts.
+- **On-Demand Full Compilation**: A `button` entity per camera to concatenate every daily video generated so far into a single `timelapse_full.mp4` master file.
 - **Hourly Timelapses**: Automatically compiles snapshots into an MP4 video at the end of every hour.
 - **Daily Merging**: Optionally merges hourly videos into a single daily timelapse file to reduce clutter.
 - **Gap Filling**: Checks for and generates missing hourly videos from looking back at existing snapshots (e.g., after a restart).
@@ -75,6 +77,17 @@
 | Daylight only                        | `08:00:00` | `20:00:00` |
 | Overnight only (wraps past midnight) | `20:00:00` | `08:00:00` |
 | Business hours                       | `09:00:00` | `18:00:00` |
+
+## Entities Created
+
+Each configured camera exposes two extra entities alongside its config entry:
+
+| Entity                     | Type     | Purpose                                                                                   |
+| :-------------------------- | :------- | :------------------------------------------------------------------------------------------ |
+| **Capture Active**          | `switch` | Pause/resume snapshot capture on demand. Off = no new snapshots (existing videos untouched). Automatable, e.g. `switch.turn_off` before doing gardening work in frame. State is restored after a Home Assistant restart. |
+| **Compile Full Timelapse**  | `button` | Concatenates every existing `timelapse_YYYY-MM-DD.mp4` daily video into one `timelapse_full.mp4` in the video folder. Re-run any time to rebuild it with newly generated days included. |
+
+> **Note on Compile Full Timelapse**: it uses a lossless stream copy (no re-encoding), so all daily videos must share the same codec/FPS/resolution. This holds true unless those settings were changed mid-project via **Reconfigure**. If compilation fails, check the logs — mismatched encoding parameters is the most likely cause.
 
 ## Troubleshooting
 
