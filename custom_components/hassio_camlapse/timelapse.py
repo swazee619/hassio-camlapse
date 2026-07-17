@@ -43,6 +43,7 @@ class TimelapseManager:
         self.output_codec = config.get("output_codec", DEFAULT_OUTPUT_CODEC)
         self.start_time = config.get("start_time", DEFAULT_START_TIME)
         self.end_time = config.get("end_time", DEFAULT_END_TIME)
+        self.capture_enabled = True
 
         self._remove_timer: Optional[CALLBACK_TYPE] = None
 
@@ -83,7 +84,19 @@ class TimelapseManager:
 
     async def _async_take_snapshot_wrapper(self, now):
         """Wrapper to call async_take_snapshot."""
+        if not self.capture_enabled:
+            _LOGGER.debug("Capture paused for %s, skipping snapshot", self.camera_entity_id)
+            return
         await self.async_take_snapshot()
+
+    async def async_set_capture_enabled(self, enabled: bool):
+        """Enable or disable snapshot capture without tearing down the timer."""
+        self.capture_enabled = enabled
+        _LOGGER.info(
+            "Timelapse capture %s for %s",
+            "enabled" if enabled else "paused",
+            self.camera_entity_id,
+        )
 
     async def async_take_snapshot(self):
         """Take a snapshot and save it."""
@@ -104,3 +117,7 @@ class TimelapseManager:
     async def merge_timelapses(self, date_str: str, hour_str: str):
         """Merge hourly timelapse into daily video if configured."""
         await self.video_service.merge_timelapses(date_str, hour_str)
+
+    async def async_compile_full_video(self):
+        """Compile all existing daily videos into a single master timelapse, on demand."""
+        return await self.video_service.async_compile_full_video()
