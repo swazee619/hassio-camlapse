@@ -64,8 +64,9 @@
 1.  **Snapshotting**: The integration triggers `camera.snapshot` for your selected entity at the defined interval. Files are saved in `Snapshot Path/{camera_name}/snapshots/YYYY-MM-DD/HH/`.
     - Before saving, the current time is checked against **Start Time** / **End Time**. If it falls outside this window, the snapshot is skipped (no file written, no error).
     - Hours with no snapshots simply produce no video for that hour — nothing else is affected.
-2.  **Hourly Generation**: At the start of a new hour, it checks the previous hour's folder. If snapshots exist, it uses `ffmpeg` to compile them into `timelapse_YYYY-MM-DD_HH.mp4`.
+2.  **Hourly Generation**: At the start of a new hour, it checks the previous hour's folder. If snapshots exist, it uses `ffmpeg` to compile them into `timelapse_YYYY-MM-DD_HH.mp4`, encoded with an explicit `-preset slow` and codec-appropriate CRF (`23` for H.264, `28` for H.265) for better compression at equivalent visual quality.
 3.  **Backlog Check**: Periodically checks for past hours that have snapshots but missing videos and generates them.
+    - To avoid re-processing already-merged hours on every check, a hidden `.merged` marker file is written inside each hour's **snapshot** folder once that hour has been folded into its daily video. If a video exists but its `.merged` marker is present, the backlog check considers it already handled and skips it — see [Troubleshooting](#troubleshooting) if you ever need to force a full regeneration.
 4.  **Merging**: If "Videos Per Day" is set to 1, hourly videos are appended to a daily `timelapse_YYYY-MM-DD.mp4` file and the hourly file is deleted.
 5.  **Cleanup**: Old snapshots and videos exceeding the retention period are automatically deleted.
 
@@ -95,3 +96,11 @@ Each configured camera exposes two extra entities alongside its config entry:
 - **Permissions**: Ensure the `Snapshot Path` and `Video Path` are writable by Home Assistant.
 - **Logs**: Check **Settings** > **System** > **Logs** for entries involved with `hassio_camlapse` for error details.
 - **No snapshots during a certain time range**: This is expected if that range falls outside your configured **Start Time** / **End Time** window. Check **Reconfigure** on the integration entry to verify the window, and enable debug logging to see `Skipping snapshot ... outside active window` entries confirming the behavior.
+- **Forcing a full video regeneration**: Deleting `.mp4` files from the video folder is not enough on its own. Each hour that was already merged into a daily video has a hidden `.merged` marker file left behind inside its **snapshot** folder (`<snapshot_path>/<camera_id>/snapshots/<date>/<hour>/.merged`), and the backlog check skips any hour with that marker — even if the corresponding video no longer exists. To force regeneration:
+  1. Delete the `.mp4` files you want rebuilt from the video folder.
+  2. Also delete the matching `.merged` markers, e.g. from a shell with access to the snapshot path:
+     ```bash
+     find <snapshot_path>/<camera_id>/snapshots -name ".merged" -delete
+     ```
+  3. Restart Home Assistant (or wait for the next hourly backlog check) to trigger regeneration, then re-press **Compile Full Timelapse** if needed.
+- **Smaller file sizes without losing quality**: The hourly encode already uses `-preset slow` with a codec-appropriate CRF for good compression at visually near-lossless quality. Switching from H.264 to H.265 (via **Reconfigure**) cuts file size further (~40-50%) at equivalent quality, but note that **Compile Full Timelapse** stream-copies (no re-encode), so all daily videos must share the same codec — regenerate older days (see above) after switching codecs to keep compilation working.
