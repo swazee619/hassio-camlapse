@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import datetime
 import asyncio
 
@@ -7,6 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+# Matches only merged daily files, e.g. timelapse_2026-07-15.mp4
+# (excludes hourly files like timelapse_2026-07-15_17.mp4 and timelapse_full.mp4)
+DAILY_VIDEO_RE = re.compile(r"^timelapse_\d{4}-\d{2}-\d{2}\.mp4$")
 
 
 class VideoService:
@@ -243,3 +248,84 @@ class VideoService:
             if status["has_snapshots"]:
                 _LOGGER.info(f"Generating missing timelapse for {date_str} {hour_str}")
                 await self.async_generate_timelapse(date_str, hour_str)
+
+    async def async_compile_full_video(self):
+        """Concatenate all existing daily videos into a single master file, on demand.
+
+        Requires 'Videos Per Day' to be set to 1 so that daily timelapse_YYYY-MM-DD.mp4
+        files exist. Uses stream copy (no re-encode), so all daily videos must share the
+        same codec/resolution/fps - true as long as those settings weren't changed
+        mid-project via Reconfigure.
+        """
+        video_folder = self.get_video_path()
+
+        def _list_daily_videos():
+            if not os.path.exists(video_folder):
+                return []
+            files = [f for f in os.listdir(video_folder) if DAILY_VIDEO_RE.match(f)]
+            return sorted(files)  # ISO date format (YYYY-MM-DD) sorts correctly as strings
+
+        daily_files = await self.hass.async_add_executor_job(_list_daily_videos)
+
+        if not daily_files:
+            _LOGGER.warning(
+                "No daily videos found to compile for %s (check 'Videos Per Day' is set to 1)",
+                self.camera_id,
+            )
+            return None
+
+        output_file = os.path.join(video_folder, "timelapse_full.mp4")
+        temp_output = os.path.join(video_folder, "timelapse_full_temp.mp4")
+        list_file_path = os.path.join(video_folder, "full_compile_list.txt")
+
+        def _write_list():
+            with open(list_file_path, "w") as f:
+                for filename in daily_files:
+                    full_path = os.path.join(video_folder, filename)
+                    f.write(f"file '{full_path}'\n")
+
+        await self.hass.async_add_executor_job(_write_list)
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            list_file_path,
+            "-c",
+            "copy",
+            temp_output,
+        ]
+
+        _LOGGER.info("Compiling %d daily videos into master timelapse for %s", len(daily_files), self.camera_id)
+        process = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+
+        def _cleanup_list():
+            if os.path.exists(list_file_path):
+                os.remove(list_file_path)
+
+        if process.returncode != 0:
+            _LOGGER.error("Failed to compile full timelapse: %s", stderr.decode())
+            await self.hass.async_add_executor_job(_cleanup_list)
+
+            def _cleanup_temp():
+                if os.path.exists(temp_output):
+                    os.remove(temp_output)
+
+            await self.hass.async_add_executor_job(_cleanup_temp)
+            return None
+
+        def _finalize():
+            os.rename(temp_output, output_file)
+
+        await self.hass.async_add_executor_job(_finalize)
+        await self.hass.async_add_executor_job(_cleanup_list)
+
+        _LOGGER.info("Full timelapse compiled at %s (%d days merged)", output_file, len(daily_files))
+        return output_file
