@@ -13,6 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 # (excludes hourly files like timelapse_2026-07-15_17.mp4 and timelapse_full.mp4)
 DAILY_VIDEO_RE = re.compile(r"^timelapse_\d{4}-\d{2}-\d{2}\.mp4$")
 
+# CRF values chosen to be visually near-lossless for each codec (different scales:
+# x265's perceptual quality at a given CRF roughly matches x264 at CRF-5).
+CODEC_CRF = {"libx264": "23", "libx265": "28"}
+ENCODE_PRESET = "slow"  # slower = better compression at the *same* visual quality
+
 
 class VideoService:
     def __init__(
@@ -87,6 +92,10 @@ class VideoService:
                 str(self.output_fps),
                 "-c:v",
                 self.output_codec,
+                "-preset",
+                ENCODE_PRESET,
+                "-crf",
+                CODEC_CRF.get(self.output_codec, "23"),
                 "-pix_fmt",
                 "yuv420p",
                 output_file,
