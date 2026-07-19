@@ -21,7 +21,7 @@
 
 1.  Open HACS in Home Assistant.
 2.  Go to **Integrations** > **Triple dots** (top right) > **Custom repositories**.
-3.  Paste the repository URL: `https://github.com/tolwi/hassio-camlapse` into the **Repository** field.
+3.  Paste the repository URL: `https://github.com/swazee619/hassio-camlapse` into the **Repository** field.
 4.  Select **Integration** as the **Category**.
 5.  Click **Add**.
 6.  Close the custom repositories dialog.
